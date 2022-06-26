@@ -58,7 +58,7 @@ const WorldAtlas = ({
                 strokeWidth={0.4}
                 d={path(state)}
                 // EX of the value of 'tooltip': 14965 (just show the data when hover)
-                onMouseEnter={(event) => {
+                onMouseMove={(event) => {
                   setTooltip({
                     data: binnedAverageData[
                       searchDivisionByStates.get(state.properties.name)

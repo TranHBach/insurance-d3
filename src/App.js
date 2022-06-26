@@ -1,6 +1,5 @@
 import "./App.css";
-import { bin, format, map as MAP, max as MAX, scalePow } from "d3";
-import { geoPath, scaleOrdinal, schemeCategory10, interpolateReds } from "d3";
+import { bin, extent, format, map as MAP, max as MAX, scalePow } from "d3";
 import { useUSAtlas } from "./hooks/useUSAtlas";
 import { useStatesDivision } from "./hooks/useStatesDivision";
 import { useData } from "./hooks/useData";
@@ -59,7 +58,7 @@ function App() {
   // const colorScale =
   //   scaleOrdinal(schemeCategory10).domain(listOfUniqueDivision);
 
-  // Create binned data
+  // Create binned data for region in term of average spending
   const binnedAverageData = useMemo(() => {
     const binnedAverageData = {};
 
@@ -121,6 +120,52 @@ function App() {
       });
     return binnedAverageData;
   }, [data, listOfUniqueDataDivision]);
+
+  // Create the threshold for aged data
+  const ageAccessor = (d) => d.age;
+  const spendingAccessor = (d) => d.age;
+
+  const binnedAgeData = useMemo(() => {
+    const thresholdList = [];
+    let binnedAgeData = null;
+    if (data) {
+      for (let i = 0; i < MAX(data, ageAccessor); i += 1) {
+        thresholdList.push(i);
+      }
+
+      // Calculate binned data based on age
+      binnedAgeData = bin()
+        .value(ageAccessor)
+        .domain(extent(data, spendingAccessor))
+        .thresholds(thresholdList)(data);
+    }
+    return binnedAgeData;
+  }, [data]);
+
+  let simpleAgeData = useMemo(
+    () =>
+      binnedAgeData &&
+      binnedAgeData.map((ageList) => {
+        // Get the age of the respondents inside of ageList
+        // Since everyone has the same age
+        // We can just get the age of the first respondent
+        let overallAge = ageList[0].age;
+
+        // Sum of spending for a specific age
+        let sum = 0;
+        let counter = 0;
+        ageList.forEach((age) => {
+          sum += age.charges;
+          counter += 1;
+        });
+
+        // Average of spending for a specific age
+        let average = sum / counter;
+
+        return { age: overallAge, average: average };
+      }),
+    [binnedAgeData]
+  );
 
   let max = 0;
   let min = 99999;
