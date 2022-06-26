@@ -1,9 +1,15 @@
+import { useMemo } from "react";
+
 const rectWidth = 800;
 const rectHeight = 15;
 const padding = { left: 50, bottom: 50 };
 
 const NewColorLegend = ({ width, height, color, opacityScale, noData }) => {
-  return (
+  const newOpacityScale = opacityScale.bind(this)
+  // Use memo tested
+  const returnValue = useMemo(() => {
+    console.log("render new color legend")
+    return(
     <g transform={`translate(${padding.left}, ${height - padding.bottom})`}>
       <linearGradient id="linear">
         <stop className="stop1" offset="0%" stopColor="white" />
@@ -16,10 +22,11 @@ const NewColorLegend = ({ width, height, color, opacityScale, noData }) => {
         stroke="black"
       />
       {opacityScale.ticks().map((tick, i) => {
-        let xLocation = opacityScale.range([0, rectWidth])(tick);
+        let xLocation = opacityScale(tick);
         return (
-          <g transform={`translate(${xLocation}, 0)`}>
-            <line key={i} y1={0} x1={0} y2={rectHeight} x2={0} stroke="black" />
+          // Multiple by rectwidth to render the lines
+          <g key={i} transform={`translate(${xLocation * rectWidth}, 0)`}>
+            <line y1={0} x1={0} y2={rectHeight} x2={0} stroke="black" />
             <text y={rectHeight + 15} textAnchor="middle">
               {tick}
             </text>
@@ -27,7 +34,8 @@ const NewColorLegend = ({ width, height, color, opacityScale, noData }) => {
         );
       })}
     </g>
-  );
+  )}, [color, height, opacityScale])
+  return returnValue
 };
 
 export default NewColorLegend;

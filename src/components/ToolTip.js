@@ -16,7 +16,7 @@ const Tooltip = ({ data, clientX, clientY, format }) => {
         style={{ fill: tooltipColor }}
       />
       <text x="15" y="18" stroke={textColor}>
-        {format(data)}
+        {isNaN(format(data)) ? "No Data": format(data)}
       </text>
       <polygon points="0,35 10,25 45,25" style={{ fill: "#74c0fc" }} />
     </g>
