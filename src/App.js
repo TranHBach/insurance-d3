@@ -8,8 +8,9 @@ import { useMemo, useState } from "react";
 import NewColorLegend from "./components/NewColorLegend";
 import Tooltip from "./components/ToolTip";
 import WorldAtlas from "./components/WorldAtlas";
+import AgeLineChart from "./components/AgeLineChart";
 
-const height = 710;
+const height = 1200;
 const width = 1200;
 
 // Color used for Division that have data
@@ -21,12 +22,31 @@ function App() {
   // Create hover effect
   const [focus, setFocus] = useState();
 
+  // Filter criteria for data
+  const [filtered, setFiltered] = useState();
+
   // data of the tooltip
   const [tooltip, setTooltip] = useState();
-  const data = useData();
+  const unfilteredData = useData();
+
+  // Filtering data if filtered State is not null
+  let data;
+  if (filtered && unfilteredData) {
+    data = unfilteredData.filter(
+      (d) => filtered.start <= d.age && d.age <= filtered.end
+    );
+    if (!data) {
+      data = unfilteredData;
+    }
+  } else {
+    data = unfilteredData;
+  }
+
+
+  
   const atlas = useUSAtlas();
 
-  // States filtered by its region (East, West, NorthEast, etc...)
+  // States filtered by its Division (East, West, NorthEast, etc...)
   const statesDivision = useStatesDivision();
 
   // if (!atlas || !statesDivision || !data) {
@@ -128,16 +148,16 @@ function App() {
   const binnedAgeData = useMemo(() => {
     const thresholdList = [];
     let binnedAgeData = null;
-    if (data) {
-      for (let i = 0; i < MAX(data, ageAccessor); i += 1) {
+    if (unfilteredData) {
+      for (let i = 0; i < MAX(unfilteredData, ageAccessor); i += 1) {
         thresholdList.push(i);
       }
 
       // Calculate binned data based on age
       binnedAgeData = bin()
         .value(ageAccessor)
-        .domain(extent(data, spendingAccessor))
-        .thresholds(thresholdList)(data);
+        .domain(extent(unfilteredData, spendingAccessor))
+        .thresholds(thresholdList)(unfilteredData);
     }
     return binnedAgeData;
   }, [data]);
@@ -210,7 +230,7 @@ function App() {
     return null;
   }, [binnedAverageData, listOfUniqueDataDivision, opacityScale]);
 
-  if (!atlas || !statesDivision || !data) {
+  if (!atlas || !statesDivision || !unfilteredData) {
     return <p>Loading...</p>;
   }
   const numberFormat = format(".3f");
@@ -248,6 +268,11 @@ function App() {
           clientY={tooltip.position[1]}
         />
       )}
+      <AgeLineChart
+        setFiltered={setFiltered}
+        height={height}
+        data={simpleAgeData}
+      />
     </svg>
   );
 }

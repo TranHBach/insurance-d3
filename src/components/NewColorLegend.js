@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 const rectWidth = 800;
 const rectHeight = 15;
-const padding = { left: 50, bottom: 50 };
+const padding = { left: 80, bottom: 565 };
 
 const NewColorLegend = ({ width, height, color, opacityScale, noData }) => {
   const newOpacityScale = opacityScale.bind(this)

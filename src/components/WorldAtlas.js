@@ -67,7 +67,7 @@ const WorldAtlas = ({
                           searchDivisionByStates.get(state.properties.name)
                         ][0].average
                       : "No Data",
-                    position: [event.clientX, event.clientY],
+                    position: [event.pageX, event.pageY],
                   });
                 }}
                 onMouseLeave={setTooltip.bind(null, null)}

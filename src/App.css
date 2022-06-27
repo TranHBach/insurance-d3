@@ -9,3 +9,17 @@
 .color-legend {
   cursor: default;
 }
+
+.line-chart {
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.axis {
+  stroke: #ced4da;
+}
+
+/* .App {
+  transform: scale(0.7) translate(-20%, -20%);
+} */
