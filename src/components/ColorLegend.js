@@ -1,12 +1,20 @@
 import { useMemo } from "react";
 const circleRadius = 7;
-const padding = { right: 200, top: 50 };
 const spaceBetweenLegend = 20;
 const textMarginLeft = 20;
 
-const ColorLegend = ({ colorLegendData, width, color, setFocus }) => {
+const ColorLegend = ({
+  colorLegendData,
+  width,
+  color,
+  setFocus,
+  padding,
+  click,
+  focus,
+}) => {
   // Use memo tested
   const returnValue = useMemo(() => {
+    console.log(colorLegendData);
     console.log("render color legend");
     return (
       <g
@@ -20,9 +28,30 @@ const ColorLegend = ({ colorLegendData, width, color, setFocus }) => {
           <g
             key={i}
             transform={`translate(0, ${(i + 1) * spaceBetweenLegend})`}
-            onMouseEnter={setFocus.bind(null, { [d.title]: true })}
-            onMouseLeave={setFocus.bind(null, null)}
+            onClick={
+              click
+                ? setFocus.bind(
+                    null,
+                    focus && focus[d.title] ? null : { [d.title]: true }
+                  )
+                : () => {}
+            }
+            onMouseEnter={
+              !click ? setFocus.bind(null, { [d.title]: true }) : () => {}
+            }
+            onMouseLeave={!click ? setFocus.bind(null, null) : () => {}}
           >
+            {click && focus && focus[d.title] && (
+              <rect
+                height={20}
+                width={135}
+                fill="black"
+                opacity={0.1}
+                x={"-.64em"}
+                y={"-.64em"}
+                rx="3"
+              />
+            )}
             <circle
               cx={0}
               cy={0}
@@ -37,7 +66,7 @@ const ColorLegend = ({ colorLegendData, width, color, setFocus }) => {
         ))}
       </g>
     );
-  }, [color, colorLegendData, setFocus, width]);
+  }, [color, colorLegendData, setFocus, width, padding, click, focus]);
   return returnValue;
 };
 

@@ -2,10 +2,9 @@ import { useMemo } from "react";
 
 const rectWidth = 800;
 const rectHeight = 15;
-const padding = { left: 80, bottom: 565 };
+const padding = { left: 100, bottom: 565 };
 
 const NewColorLegend = ({ width, height, color, opacityScale, noData }) => {
-  const newOpacityScale = opacityScale.bind(this)
   // Use memo tested
   const returnValue = useMemo(() => {
     console.log("render new color legend")

@@ -20,6 +20,13 @@
   stroke: #ced4da;
 }
 
+.axis-title {
+  font-size: 20px;
+  /* font-weight: bold; */
+  stroke: #868e96;
+  fill: #868e96
+}
+
 /* .App {
   transform: scale(0.7) translate(-20%, -20%);
 } */

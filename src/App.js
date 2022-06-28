@@ -1,5 +1,14 @@
 import "./App.css";
-import { bin, extent, format, map as MAP, max as MAX, scalePow } from "d3";
+import {
+  scaleOrdinal,
+  schemeDark2,
+  bin,
+  extent,
+  format,
+  map as MAP,
+  max as MAX,
+  scalePow,
+} from "d3";
 import { useUSAtlas } from "./hooks/useUSAtlas";
 import { useStatesDivision } from "./hooks/useStatesDivision";
 import { useData } from "./hooks/useData";
@@ -18,9 +27,57 @@ const availableDataColor = "#c92a2a";
 
 const noDataColor = "#ced4da";
 
+// Create a function to create binned data and then develop a simplier dataset
+const createBinnedAgeData = (data) => {
+  const spendingAccessor = (d) => d.age;
+  const ageAccessor = (d) => d.age;
+
+  // Create the threshold for aged data
+  const thresholdList = [];
+  let binnedAgeData = null;
+  if (data) {
+    for (let i = 0; i < MAX(data, ageAccessor); i += 1) {
+      thresholdList.push(i);
+    }
+
+    // Calculate binned data based on age
+    binnedAgeData = bin()
+      .value(ageAccessor)
+      .domain(extent(data, spendingAccessor))
+      .thresholds(thresholdList)(data);
+  }
+  return binnedAgeData;
+};
+
+const createSimpleData = (data) => {
+  return (
+    data &&
+    data.map((ageList) => {
+      // Get the age of the respondents inside of ageList
+      // Since everyone has the same age
+      // We can just get the age of the first respondent
+      let overallAge = ageList[0].age;
+
+      // Sum of spending for a specific age
+      let sum = 0;
+      let counter = 0;
+      ageList.forEach((age) => {
+        sum += age.charges;
+        counter += 1;
+      });
+
+      // Average of spending for a specific age
+      let average = sum / counter;
+
+      return { age: overallAge, average: average };
+    })
+  );
+};
+
 function App() {
   // Create hover effect
   const [focus, setFocus] = useState();
+  const [focusType, setFocusType] = useState();
 
   // Filter criteria for data
   const [filtered, setFiltered] = useState();
@@ -42,8 +99,29 @@ function App() {
     data = unfilteredData;
   }
 
+  // Create different category
+  const smoker =
+    unfilteredData && unfilteredData.filter((d) => d.smoker === "yes");
+  const nonSmoker =
+    unfilteredData && unfilteredData.filter((d) => d.smoker === "no");
+  const male = unfilteredData && unfilteredData.filter((d) => d.sex === "male");
+  const female =
+    unfilteredData && unfilteredData.filter((d) => d.sex === "female");
 
-  
+  const typeScale = scaleOrdinal(schemeDark2).domain([
+    "All",
+    "Smoker",
+    "Non-Smoker",
+    "Male",
+    "Female",
+  ]);
+
+  const colorLegendTypeData = typeScale
+    .domain()
+    .map((d) => ({ title: d, color: typeScale(d) }));
+
+  console.log(colorLegendTypeData);
+
   const atlas = useUSAtlas();
 
   // States filtered by its Division (East, West, NorthEast, etc...)
@@ -141,50 +219,50 @@ function App() {
     return binnedAverageData;
   }, [data, listOfUniqueDataDivision]);
 
-  // Create the threshold for aged data
-  const ageAccessor = (d) => d.age;
-  const spendingAccessor = (d) => d.age;
-
-  const binnedAgeData = useMemo(() => {
-    const thresholdList = [];
-    let binnedAgeData = null;
-    if (unfilteredData) {
-      for (let i = 0; i < MAX(unfilteredData, ageAccessor); i += 1) {
-        thresholdList.push(i);
-      }
-
-      // Calculate binned data based on age
-      binnedAgeData = bin()
-        .value(ageAccessor)
-        .domain(extent(unfilteredData, spendingAccessor))
-        .thresholds(thresholdList)(unfilteredData);
-    }
-    return binnedAgeData;
-  }, [data]);
+  // Basic binned data for everyone
+  const binnedAgeData = useMemo(
+    () => createBinnedAgeData(unfilteredData),
+    [unfilteredData]
+  );
 
   let simpleAgeData = useMemo(
-    () =>
-      binnedAgeData &&
-      binnedAgeData.map((ageList) => {
-        // Get the age of the respondents inside of ageList
-        // Since everyone has the same age
-        // We can just get the age of the first respondent
-        let overallAge = ageList[0].age;
-
-        // Sum of spending for a specific age
-        let sum = 0;
-        let counter = 0;
-        ageList.forEach((age) => {
-          sum += age.charges;
-          counter += 1;
-        });
-
-        // Average of spending for a specific age
-        let average = sum / counter;
-
-        return { age: overallAge, average: average };
-      }),
+    () => createSimpleData(binnedAgeData),
     [binnedAgeData]
+  );
+
+  // Filter Smoker only
+  const binnedSmokerData = useMemo(() => createBinnedAgeData(smoker), [smoker]);
+
+  let simpleSmokerData = useMemo(
+    () => createSimpleData(binnedSmokerData),
+    [binnedSmokerData]
+  );
+
+  // Filter non-smoker only
+  const binnedNonSmokerData = useMemo(
+    () => createBinnedAgeData(nonSmoker),
+    [nonSmoker]
+  );
+
+  let simpleNonSmokerData = useMemo(
+    () => createSimpleData(binnedNonSmokerData),
+    [binnedNonSmokerData]
+  );
+
+  // Filter male only
+  const binnedMaleData = useMemo(() => createBinnedAgeData(male), [male]);
+
+  let simpleMaleData = useMemo(
+    () => createSimpleData(binnedMaleData),
+    [binnedMaleData]
+  );
+
+  // Filter female only
+  const binnedFemaleData = useMemo(() => createBinnedAgeData(female), [female]);
+
+  let simpleFemaleData = useMemo(
+    () => createSimpleData(binnedFemaleData),
+    [binnedFemaleData]
   );
 
   let max = 0;
@@ -252,6 +330,8 @@ function App() {
         height={height}
         width={width}
         colorLegendData={colorLegendData}
+        padding={{ right: 200, top: 50 }}
+        click={false}
       />
       <NewColorLegend
         width={width}
@@ -271,7 +351,23 @@ function App() {
       <AgeLineChart
         setFiltered={setFiltered}
         height={height}
+        color={colorLegendTypeData}
         data={simpleAgeData}
+        smoker={simpleSmokerData}
+        nonSmoker={simpleNonSmokerData}
+        male={simpleMaleData}
+        female={simpleFemaleData}
+        focus={focusType}
+      />
+      <ColorLegend
+        setFocus={setFocusType}
+        color={availableDataColor}
+        height={height}
+        width={width}
+        colorLegendData={colorLegendTypeData}
+        padding={{ right: 200, top: 700 }}
+        focus={focusType}
+        click={true}
       />
     </svg>
   );
